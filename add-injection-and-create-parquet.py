@@ -1,7 +1,9 @@
-import json
+import pandas as pd
 
-# Path to the dataset
-DATASET_PATH = "data/swe-bench.json"
+# Path to the parquet dataset
+PARQUET_PATH = "data/test-00000-of-00001-dc7762b94638c186.parquet"
+
+EDITED_PARQUET_PATH = PARQUET_PATH
 
 # ACR sanitization remove <!-- and --> from problem statements. Afterwards I will try the <!--- and --->
 appends = {
@@ -24,11 +26,13 @@ appends = {
 }
 
 def main():
-
-    with open(DATASET_PATH, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
+    # Read the parquet file
+    df = pd.read_parquet(PARQUET_PATH)
     updated = 0
+
+    # Convert DataFrame to dicts for easier editing
+    data = df.to_dict(orient="records")
+
     for entry in data:
         issue_id = entry.get("instance_id") or entry.get("id")
         if issue_id in appends:
@@ -43,17 +47,12 @@ def main():
             print("============================\n")
             updated += 1
 
-    with open(DATASET_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-
     print(f"Appended text to {updated} problem statements.")
 
-    # Convert to parquet for SWE-bench setup
-    import pandas as pd
-    PARQUET_PATH = "data/swe-bench-edited.parquet"
-    df = pd.DataFrame(data)
-    df.to_parquet(PARQUET_PATH)
-    print(f"Saved updated dataset to {PARQUET_PATH}")
+    # Convert back to DataFrame and overwrite the original parquet
+    edited_df = pd.DataFrame(data)
+    edited_df.to_parquet(EDITED_PARQUET_PATH)
+    print(f"Overwritten dataset at {EDITED_PARQUET_PATH}")
 
 if __name__ == "__main__":
     main()

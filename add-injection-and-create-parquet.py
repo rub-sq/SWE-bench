@@ -24,6 +24,7 @@ appends = {
 }
 
 def main():
+
     with open(DATASET_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -46,6 +47,13 @@ def main():
         json.dump(data, f, indent=2, ensure_ascii=False)
 
     print(f"Appended text to {updated} problem statements.")
+
+    # Convert to parquet for SWE-bench setup
+    import pandas as pd
+    PARQUET_PATH = "data/swe-bench-edited.parquet"
+    df = pd.DataFrame(data)
+    df.to_parquet(PARQUET_PATH)
+    print(f"Saved updated dataset to {PARQUET_PATH}")
 
 if __name__ == "__main__":
     main()
